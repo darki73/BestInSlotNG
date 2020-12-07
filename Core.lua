@@ -18,7 +18,7 @@ BestInSlot.options = {}
 BestInSlot.defaultModuleState = false
 BestInSlot.options.DEBUG = false
 -- Authors
-BestInSlot.Author1 = ("%s%s @ %s"):format("|c"..RAID_CLASS_COLORS.DEMONHUNTER.colorStr, "Dangerpuss".."|r",ConvertRGBtoColorString(PLAYER_FACTION_COLORS[0]).."Kazzak-EU|r")
+BestInSlot.Author1 = ("%s%s @ %s"):format("|c"..RAID_CLASS_COLORS.PALADIN.colorStr, "Dangerpuss".."|r",ConvertRGBtoColorString(PLAYER_FACTION_COLORS[0]).."Kazzak-EU|r")
 BestInSlot.Author2 = ("%s%s @ %s"):format("|c"..RAID_CLASS_COLORS.DEMONHUNTER.colorStr, "Beleria".."|r",ConvertRGBtoColorString(PLAYER_FACTION_COLORS[1]).."Argent Dawn-EU|r")
 BestInSlot.Author3 = ("%s%s @ %s"):format("|c"..RAID_CLASS_COLORS.PALADIN.colorStr, "Anhility".."|r",ConvertRGBtoColorString(PLAYER_FACTION_COLORS[1]).."Ravencrest-EU|r")
 BestInSlot.Author4 = ("%s%s @ %s"):format("|c"..RAID_CLASS_COLORS.ROGUE.colorStr, "Sar\195\173th".."|r",ConvertRGBtoColorString(PLAYER_FACTION_COLORS[1]).."Tarren Mill-EU|r")
