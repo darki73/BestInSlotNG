@@ -64,7 +64,7 @@ function Credits:Draw(container)
   -- foreword
   local label = AceGUI:Create("Label")
   label:SetText(
-    "I (Astratheon) have only upgraded this addon with latest modules and some minor changes to improve the quality of life for the end user.\n"..
+    "I (Dangerpuss) have only upgraded this addon with latest modules and some minor changes to improve the quality of life for the end user.\n"..
     "There have been a lot of people making awesome recommendations and I'd like to include them in here as a way of thanking them.\n"..
     "This page is intentionally untranslated in other languages because it is my personal message to those that helped me.\n"..
     "\n"..
@@ -88,7 +88,7 @@ function Credits:Draw(container)
   label:SetText(self.Author)
   label:SetFullWidth(true)
   -- authors
-  scroll:AddChild(self:CreateTesterLabel("Astratheon",   "Kazzak-EU", "DEMONHUNTER",  "H"))
+  scroll:AddChild(self:CreateTesterLabel("Dangerpuss",   "Kazzak-EU", "PALADIN",  "H"))
   scroll:AddChild(self:CreateTesterLabel("Beleria",   "Argent Dawn-EU", "DEMONHUNTER",  "A"))
   scroll:AddChild(self:CreateTesterLabel("Anhility",  "Ravencrest-EU",  "PALADIN",      "A"))
   scroll:AddChild(self:CreateTesterLabel("Sar\195\173th",  "Tarren Mill-EU",  "ROGUE",      "A"))

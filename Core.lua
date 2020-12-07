@@ -18,7 +18,7 @@ BestInSlot.options = {}
 BestInSlot.defaultModuleState = false
 BestInSlot.options.DEBUG = false
 -- Authors
-BestInSlot.Author1 = ("%s%s @ %s"):format("|c"..RAID_CLASS_COLORS.DEMONHUNTER.colorStr, "Astratheon".."|r",ConvertRGBtoColorString(PLAYER_FACTION_COLORS[0]).."Kazzak-EU|r")
+BestInSlot.Author1 = ("%s%s @ %s"):format("|c"..RAID_CLASS_COLORS.DEMONHUNTER.colorStr, "Dangerpuss".."|r",ConvertRGBtoColorString(PLAYER_FACTION_COLORS[0]).."Kazzak-EU|r")
 BestInSlot.Author2 = ("%s%s @ %s"):format("|c"..RAID_CLASS_COLORS.DEMONHUNTER.colorStr, "Beleria".."|r",ConvertRGBtoColorString(PLAYER_FACTION_COLORS[1]).."Argent Dawn-EU|r")
 BestInSlot.Author3 = ("%s%s @ %s"):format("|c"..RAID_CLASS_COLORS.PALADIN.colorStr, "Anhility".."|r",ConvertRGBtoColorString(PLAYER_FACTION_COLORS[1]).."Ravencrest-EU|r")
 BestInSlot.Author4 = ("%s%s @ %s"):format("|c"..RAID_CLASS_COLORS.ROGUE.colorStr, "Sar\195\173th".."|r",ConvertRGBtoColorString(PLAYER_FACTION_COLORS[1]).."Tarren Mill-EU|r")
@@ -229,7 +229,7 @@ BestInSlot.invSlots = {
     [17] = {"INVTYPE_WEAPONOFFHAND", "INVTYPE_SHIELD", "INVTYPE_WEAPON", "INVTYPE_HOLDABLE"},
     --[18] = {"INVTYPE_RANGED", "INVTYPE_THROWN", "INVTYPE_RANGEDRIGHT", "INVTYPE_RELIC"}
 }
-BestInSlot.dualWield = {250, 251, 252, 268, 269, 259, 260, 261, 263, 71, 72}
+BestInSlot.dualWield = {250, 251, 252, 268, 269, 259, 260, 261, 263, 72}
 
 ------------------------------------------------------------------------------------------------------------------------------------------------
 -- MODULE REGISTRATION
@@ -413,8 +413,8 @@ local  bossNewIndexMetatable = {
 -- @param #string unlocalizedInstanceName The unlocalized name of the instance to add the loot to.
 -- @param #table lootTable The table containing the loot for the boss, must be formatted as follows: {["Normal"] = {itemId1, itemId2}, ["Heroic"] = {itemId1, itemId2}}
 -- @param #string bossName Localized name of the boss, you can use LibBabbleBoss-3.0 for this.
--- @param #number tierToken If supplied, registers this item as a boss that drops the supplied tiertoken. 1 = HeadSlot, 3 = ShoulderSlot, 5 = ChestSlot, 7 = LegsSlot, 10 = Handslot, 15 = BackSlot.
-function BestInSlot:RegisterBossLoot(unlocalizedInstanceName, lootTable, bossName, tierToken, bossId)
+-- @param #number tierTokens If supplied, registers this boss as a boss that drops the supplied tiertokens. 1 = HeadSlot, 3 = ShoulderSlot, 5 = ChestSlot, 7 = LegsSlot, 10 = Handslot, 15 = BackSlot.
+function BestInSlot:RegisterBossLoot(unlocalizedInstanceName, lootTable, bossName, tierTokens, bossId)
     local instance = data.instances[unlocalizedInstanceName]
     if not instance then error("The instance \""..unlocalizedInstanceName.."\" has not yet been registered!") end
     lootTable.info = {name = bossName}
@@ -467,9 +467,15 @@ function BestInSlot:RegisterBossLoot(unlocalizedInstanceName, lootTable, bossNam
         tinsert(itemData[unlocalizedInstanceName], bossLootTable) --add loot to itemData
         tinsert(data.bosses[unlocalizedInstanceName], bossName) --add Boss info to data
     end
-    if tierToken then
+    if tierTokens then
         data.tiertokens[unlocalizedInstanceName] = data.tiertokens[unlocalizedInstanceName] or {}
-        data.tiertokens[unlocalizedInstanceName][tierToken] = {dungeon = unlocalizedInstanceName, bossid = #data.bosses[unlocalizedInstanceName]}
+        if type(tierTokens) == "table" then
+            for _, tierToken in pairs(tierTokens) do
+                data.tiertokens[unlocalizedInstanceName][tierToken] = {dungeon = unlocalizedInstanceName, bossid = #data.bosses[unlocalizedInstanceName]}
+            end
+        else
+            data.tiertokens[unlocalizedInstanceName][tierTokens] = {dungeon = unlocalizedInstanceName, bossid = #data.bosses[unlocalizedInstanceName]}
+        end
     end
     BestInSlot.hasModules = true
 end
@@ -827,9 +833,6 @@ end
 function BestInSlot:GetPersonalizedLootTableBySlot(raidTier, slotId, difficulty, specializationId, lowerRaidTiers, uniquenessSpec)
     local specRole, class = select(6, GetSpecializationInfoByID(specializationId))
     uniquenessSpec = uniquenessSpec or specializationId
-    if specializationId == 261 then --Subtlety Rogues
-        return self:GetPersonalizedLootTableBySlot(raidTier, slotId, difficulty, 260, lowerRaidTiers, 261) --Return table for combat rogues. Non-Daggers can be used by sub aswell
-    end
     if specializationId == 72 and slotId == 17 then --Fury warriors can wield everything in their offhand
         return self:GetPersonalizedLootTableBySlot(raidTier, 16, difficulty, specializationId, lowerRaidTiers) --return main hand loot list instead
     end
@@ -840,7 +843,7 @@ function BestInSlot:GetPersonalizedLootTableBySlot(raidTier, slotId, difficulty,
     end
     for id, item in pairs(items) do
         local canUse
-        local statFilter = GetItemSpecInfo(item.itemid)
+        local specFilter = GetItemSpecInfo(item.itemid)
         if item.exceptions then
             local checks = {specRole, class}
             for i, check in pairs({"role", "class"}) do
@@ -851,18 +854,18 @@ function BestInSlot:GetPersonalizedLootTableBySlot(raidTier, slotId, difficulty,
                 end
             end
         end
-        if statFilter then
-            if #statFilter == 0 then --There is no itemspecinfo available for this item, normally the table should be nil
+        if specFilter then
+            if #specFilter == 0 then --There is no itemspecinfo available for this item, normally the table should be nil
                 if raidTier > 70000 and (slotId == 2 or slotId == 11 or slotId == 12) and item.misc ~= LOOT_JOURNAL_LEGENDARIES then
                     canUse = true
                 else
                     canUse = item.customitem ~= nil
                 end
             else
-                canUse = tContains(statFilter, specializationId)
+                canUse = tContains(specFilter, specializationId)
             end
         else
-            canUse = false
+            canUse = true
         end
         if canUse and tContains(data.raidTiers[raidTier].instances, item.dungeon) then --check item uniqueness
             local family, count = GetItemUniqueness(item.itemid)
@@ -881,33 +884,6 @@ function BestInSlot:GetPersonalizedLootTableBySlot(raidTier, slotId, difficulty,
         end
         if not canUse then
             items[id] = nil
-        end
-    end
-    local addSpec
-    if specializationId == 73 then --Prot warriors
-        addSpec = 71 --Arms
-    elseif specializationId == 104 then --Guardian Druid
-        addSpec = 103 --Feral Druid
-    elseif specializationId == 66 then --Prot Pally
-        addSpec = 70 --Ret Pally
-    elseif specializationId == 250 then --Blood DK
-        addSpec = 252 --Unholy DK
-    elseif specializationId == 268 then --Brewmaster Monk
-        addSpec = 269 --Windwalker Monk
-    elseif specializationId == 105 then --Resto Druid
-        addSpec = 102 --Balance Druid
-    elseif specializationId == 264 then --Resto Shaman
-        addSpec = 262 --Elemental Shaman
-    elseif specializationId == 257 or specializationId == 256 then --Both Healing Priests
-        addSpec = 258 --Shadow Priest
-    end
-    --ToDo Implement fix for paladin
-    if addSpec then
-        local dpsItems = self:GetPersonalizedLootTableBySlot(raidTier, slotId, difficulty, addSpec, lowerRaidTiers, specializationId)
-        for itemid, item in pairs(dpsItems) do
-            if not items[itemid] then
-                items[itemid] = item
-            end
         end
     end
     return items

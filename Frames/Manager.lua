@@ -110,22 +110,22 @@ local function selectItemLabelOnClick(widget, _, key)
         local oldItemId = icon:GetUserData("itemid")
         if item then
             itemGroup:GetUserData("label"):SetText(item.link)
-            icon:SetImage(GetItemIcon(itemid))
-            icon:SetUserData("itemid", itemid)
+            icon:SetImage(GetItemIcon(item.itemid))
+            icon:SetUserData("itemid", item.itemid)
             icon:SetUserData("itemlink", item.link)
         else
+            itemGroup:GetUserData("label"):SetText("")
+            icon:SetImage(unpack(itemGroup:GetUserData("defaultTexture")))
             icon:SetUserData("itemid", nil)
             icon:SetUserData("itemlink", nil)
-            icon:SetImage(unpack(itemGroup:GetUserData("defaultTexture")))
-            itemGroup:GetUserData("label"):SetText("")
         end
-        if itemSelectionMode[1] == 15 then
+        if item and itemSelectionMode[1] == 15 then
             if select(2, Manager:GetSelected(Manager.SPECIALIZATION)) ~= 72 then --Don't disable for fury warriors
                 local offhandGroup = itemGroups[16]
                 local offhandIcon = offhandGroup:GetUserData("icon")
                 local offhandLabel = offhandGroup:GetUserData("label")
                 local offhandButton = offhandGroup:GetUserData("button")
-                local subclass = select(7, GetItemInfo(itemid))
+                local subclass = select(7, GetItemInfo(item.itemid))
                 if item and (item.equipSlot == "INVTYPE_2HWEAPON" or item.equipSlot == "INVTYPE_RANGED" or (item.equipSlot == "INVTYPE_RANGEDRIGHT" and subclass ~= BabbleInventory.Wands)) then
                     offhandIcon:SetUserData("disabled", true)
                     offhandIcon:SetImage(unpack(offhandGroup:GetUserData("defaultTexture")))
@@ -404,8 +404,14 @@ local function iconOnClick(widget, _, button)
     local item = Manager:GetItem(itemid, Manager:GetSelected(Manager.DIFFICULTY))
     if shift then
         local link = (item and item.link) or widget:GetUserData("itemlink")
-        if not ChatEdit_InsertLink(link) then
-            ChatFrame_OpenChat(link)
+        if button == "LeftButton" then
+            if not ChatEdit_InsertLink(link) then
+                ChatFrame_OpenChat(link)
+            end
+        elseif button == "RightButton" then
+            if C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItemByID(link) then
+                OpenAzeriteEmpoweredItemUIFromLink(link)
+            end
         end
     elseif ctrl then
         local link = (item and item.link) or widget:GetUserData("itemlink")
@@ -483,7 +489,7 @@ function Manager:PopulateSlots(slotContainer)
         local itemid = BiSList[slotId] and BiSList[slotId].item
         local isLegionWeapon = false
         -- Fix by dioxina
-        if slotId == 15 and (self:GetSelected(self.RAIDTIER) >= 80200 and self:GetSelected(self.RAIDTIER) < 90000) then
+        if slotId == 15 and (self:GetSelected(self.RAIDTIER) >= 80300 and self:GetSelected(self.RAIDTIER) < 90000) then
             --Legendary cloak
             icon:SetUserData("disabled", true)
             button:SetDisabled(true)
@@ -684,7 +690,7 @@ function Manager:SetImportDropdownData(dropdown)
     local firstChar = true
     local thisChar = self.db:GetCurrentProfile()
     for id, profile in pairs(self.db:GetProfiles()) do
-        local charDb = BestInSlotNGDB.char[profile]
+        local charDb = BestInSlotDB.char[profile]
         if charDb and profile ~= thisChar and charDb[selectedRaidTier] and charDb[selectedRaidTier][selectedDifficulty] and charDb[selectedRaidTier][selectedDifficulty][selectedSpecialization] then
             if firstChar then
                 firstChar = false
@@ -760,7 +766,7 @@ end
 function Manager:DoCopyChar()
     local selectedChar = dropdownImport:GetValue()
     local selectedInfo = Manager:GetSelected()
-    local otherCharList = BestInSlotNGDB.char[selectedChar][selectedInfo.raidtier][selectedInfo.difficulty][selectedInfo.specialization]
+    local otherCharList = BestInSlotDB.char[selectedChar][selectedInfo.raidtier][selectedInfo.difficulty][selectedInfo.specialization]
     for i, iteminfo in pairs(otherCharList) do
         self:Print(i .. ": "..iteminfo)
         self:SetItemBestInSlot(selectedInfo.raidtier, selectedInfo.difficulty, selectedInfo.specialization, i, iteminfo)
